@@ -10,6 +10,7 @@ from chroma_utils import vectorstore
 
 
 retriever = vectorstore.as_retriever(search_kwargs={"k": 2})
+# retriever = vectorstore.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k": 2,"score_threshold": 0.5})
 
 output_parser = StrOutputParser()
 
@@ -27,19 +28,35 @@ contextualize_q_prompt = ChatPromptTemplate.from_messages([
     ("human", "{input}"),
 ])
 
+# qa_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", """
+#         You are an AI assistant. You are given a context and a question. 
+#         Answer the question based only on the context. 
+#         If the context does not provide relevant information or if the context is blank, say: "Sorry, I don't have enough information to answer."
+#         """),
+#         ("system", "Context : {context}"),
+#         MessagesPlaceholder(variable_name = "chat_history"),
+#         ("human", "{input}")
+#     ]
+# )
+
+
 qa_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful AI assistant. Use the following context to answer the user's question."),
+    ("system", """You are a helpful AI assistant. You are given a context and a question from user.
+      Answer the user's question based only on the context."""),
     ("system", "Context: {context}"),
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}")
 ])
 
 def get_rag_chain(model="gpt-3.5-turbo"):
-    llm = ChatOpenAI(model = model)
+    llm = ChatOpenAI(model = model, temperature = 0.1)
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)    
     return rag_chain
+
 
 
 '''
