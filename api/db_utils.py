@@ -96,6 +96,7 @@ def get_all_documents():
     cursor = conn.cursor()
     cursor.execute('SELECT id, filename, upload_timestamp FROM document_store ORDER BY upload_timestamp DESC')
     documents = cursor.fetchall()
+    # print(documents)
     conn.close()
     return [dict(doc) for doc in documents]
 
